@@ -27,7 +27,7 @@ Where:
 
 -   t- number of time step
 
--   [parameters to update](https://latex.codecogs.com/gif.latex?$\theta_{t&space;&plus;&space;1},\theta_{t}\&space;$) - parameters to update (t+1 –step we
+-   ![parameters to update](https://latex.codecogs.com/gif.latex?$\theta_{t&space;&plus;&space;1},\theta_{t}\&space;$) - parameters to update (t+1 –step we
     want to do)
 
 -   _lr_ – learning rate
@@ -35,27 +35,27 @@ Where:
 -   _bias_corr_ – bias correction. In standard algorithms, it applies
     in Adam optimizer when we correct exponential averages of past and
     past squared gradients (make transition from
-    [ ](https://latex.codecogs.com/gif.latex?$m_{t}\text{\&space;to\&space;}{\hat{m}}_{t}$) and from
-    [ ](https://latex.codecogs.com/gif.latex?$v_{t}\text{\&space;to\&space;}{\hat{v}}_{t}$) respectively). In other cases we
+    ![ ](https://latex.codecogs.com/gif.latex?$m_{t}\text{\&space;to\&space;}{\hat{m}}_{t}$) and from
+    ![ ](https://latex.codecogs.com/gif.latex?$v_{t}\text{\&space;to\&space;}{\hat{v}}_{t}$) respectively). In other cases we
     can set it equals to 1
 
--   [RMSE of parameters update](https://latex.codecogs.com/gif.latex?$\text{RMS}\left\lbrack&space;\theta&space;\right\rbrack_{t&space;-&space;1}$) – root mean
+-   ![RMSE of parameters update](https://latex.codecogs.com/gif.latex?$\text{RMS}\left\lbrack&space;\theta&space;\right\rbrack_{t&space;-&space;1}$) – root mean
     squared error of parameter updates, use instead of learning rate in
     Adadelta algorithm. Could be 1 if we don’t use it
 
--   [exponential averages of past gradients](https://latex.codecogs.com/gif.latex?$m_{t}$) - exponential averages of past gradients. Can be momentum
+-   ![exponential averages of past gradients](https://latex.codecogs.com/gif.latex?$m_{t}$) - exponential averages of past gradients. Can be momentum
     (SGD with momentum, Adam), or nesterov momentum (SGD with nesterov
     momentum, Nadam)
 
--   [calculated gradient](https://latex.codecogs.com/gif.latex?$g_{t}$) – calculated gradient. Use in case if we don’t use
+-   ![calculated gradient](https://latex.codecogs.com/gif.latex?$g_{t}$) – calculated gradient. Use in case if we don’t use
     exponential averages of past gradients (classical SGD)
 
--   [exponential averages of past squared gradients](https://latex.codecogs.com/gif.latex?$v_{t}$) - exponential averages of past squared gradients. Can be
+-   ![exponential averages of past squared gradients](https://latex.codecogs.com/gif.latex?$v_{t}$) - exponential averages of past squared gradients. Can be
     classical (Adadelta, Adam, RMSProp), use infinite ℓ-norm (Adamax) or
     use the maximum of past squared gradients $v_{t}$rather than the
     exponential average (Adam with amsgrad)
 
--   [epsilon](https://latex.codecogs.com/gif.latex?$\varepsilon$) – small constant number (like 1-e7) to avoid zero
+-   ![epsilon](https://latex.codecogs.com/gif.latex?$\varepsilon$) – small constant number (like 1-e7) to avoid zero
     division
 
 In proposed solution, all formula components are parametrized and we can
