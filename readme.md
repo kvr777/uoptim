@@ -96,7 +96,7 @@ Below is the schema how to set up optimizer:
 
 -   In the end of notebook you can find some inspiring results of
     optimizers that were built by using components of different standard
-    optimizers. ** These “exotic” optimizers were considerably better than the best standard
+    optimizers. **These “exotic” optimizers were considerably better than the best standard
     optimizers!**
 
 ## Versioning
