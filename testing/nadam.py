@@ -75,7 +75,12 @@ class Nadam(Optimizer):
 
                 exp_avg.mul_(beta1).add_(1 - beta1, grad)
                 exp_avg_sq.mul_(beta2).addcmul_(1 - beta2, grad, grad)
-                exp_avg_sq_prime = exp_avg_sq.div(1. - bias_correction2)
+
+                # I fixed here zero div problem.
+                try:
+                    exp_avg_sq_prime = exp_avg_sq.div(1. - bias_correction2)
+                except ZeroDivisionError:
+                    exp_avg_sq_prime = exp_avg_sq.div(1. - bias_correction2+group['eps'])
 
                 denom = exp_avg_sq_prime.sqrt_().add_(group['eps'])
 

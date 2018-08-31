@@ -68,9 +68,20 @@ Below is the schema how to set up optimizer:
 
 ![schema how to set up optimizer](algo_explanation.png)
 
+So as a result if we want to reproduce the standard optimizers  we have to use the following parameters of universal optimizer:
+
+![mapping between the standard optimizers and UOptimizer](mapping_with_standard_classifiers.png)
+
+[1] We note here only the parameters which you have to change from default values.  
+[2] In order to avoid repeating , in all cases you can change default values of learning rate (parameter “lr”, default value is 1e-3) and weight decay regularization (“weight_decay”, default value is zero)
+[3] See [here](https://arxiv.org/abs/1711.05101) for more details about this optimizer
+
+
+
+
 **Requirements**
 
--   Python 3
+-   Python 3.6 and above
 
 -   Pytorch 0.4
 
