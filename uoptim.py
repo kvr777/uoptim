@@ -6,6 +6,8 @@ import torch
 from torch.optim import Optimizer
 
 
+
+
 class UOptimizer(Optimizer):
     """Implements universal constructor for gradient descent optimization in PyTorch
 
@@ -53,6 +55,13 @@ class UOptimizer(Optimizer):
                 to gradient directly before each step (like in standard algorithms), we apply it after
                 and take into consideration step size. See more details in https://arxiv.org/abs/1711.05101
                 (default: False)
+        eps_under_root (bool, optional): in some classical algorithms epsilon in denominator can be under square root
+        (Adadelta), but in Adam-like algorithms it's added after. To preserve the flexibility it is possible
+        to choose this option. (default: False)
+        optimizer (string, optional): to make the life easier, user can select classical algorithm from list:
+        {SGDM (SGD with momentum), SGDNM (SGD with Nesterov Momentum), Adadelta, RMSProp, Adam, Adamax, Nadam, AdamW,
+        Amsgrad}. Leave None if you need vanilla SGD, or setup non-standard optimizer.
+
     """
 
     def __init__(self,
@@ -68,7 +77,9 @@ class UOptimizer(Optimizer):
                  beta1_dump=None,
                  eps=1e-8,
                  weight_decay=0,
-                 decouple_wd=False):
+                 decouple_wd=False,
+                 eps_under_root=False,
+                 optimizer=None):
 
         if not 0.0 <= lr:
             raise ValueError("Invalid learning rate: {}".format(lr))
@@ -80,6 +91,7 @@ class UOptimizer(Optimizer):
             raise ValueError("Invalid beta2: {}".format(betas[1]))
         if beta1_dump is not None and beta1_dump < 0.0:
             raise ValueError("Invalid beta1_dump: {}".format(beta1_dump))
+
         defaults = dict(use_exp_avg_norm=use_exp_avg_norm,
                         use_exp_avg_sq_norm=use_exp_avg_sq_norm,
                         exp_avg_norm_type=exp_avg_norm_type,        # ['momentum', 'nesterov']
@@ -91,7 +103,45 @@ class UOptimizer(Optimizer):
                         beta1_dump=beta1_dump,
                         eps=eps,
                         weight_decay=weight_decay,
-                        decouple_wd=decouple_wd)
+                        decouple_wd=decouple_wd,
+                        eps_under_root=eps_under_root,
+                        optimizer=optimizer)
+
+        optimizers_dict = {
+            'SGDM': {'use_exp_avg_norm': True},
+            'SGDNM': {'use_exp_avg_norm': True,
+                      'exp_avg_norm_type': 'nesterov'},
+            'Adadelta': {'use_exp_avg_sq_norm': True,
+                         'use_adadelta_lr': True,
+                         'eps_under_root': True},
+            'RMSProp': {'use_exp_avg_sq_norm': True},
+            'Adam': {'use_exp_avg_norm': True,
+                     'use_exp_avg_sq_norm': True,
+                     'use_bias_correction': True},
+            'Adamax': {'use_exp_avg_norm': True,
+                       'use_exp_avg_sq_norm': True,
+                       'use_bias_correction': True,
+                       'exp_avg_sq_norm_type': 'infinite_l'},
+            'Nadam': {'use_exp_avg_norm': True,
+                      'use_exp_avg_sq_norm': True,
+                      'use_bias_correction': True,
+                      'exp_avg_sq_norm_type': 'nesterov'},
+            'AdamW': {'use_exp_avg_norm': True,
+                      'use_exp_avg_sq_norm': True,
+                      'use_bias_correction': True,
+                      'decouple_wd': True},
+            'Amsgrad': {'use_exp_avg_norm': True,
+                        'use_exp_avg_sq_norm': True,
+                        'use_bias_correction': True,
+                        'exp_avg_sq_norm_type': 'max_past_sq'},
+        }
+
+        if optimizer is not None:
+            if optimizer not in optimizers_dict.keys():
+                raise ValueError("Invalid optimizer: {}".format(optimizer))
+            else:
+                defaults.update(optimizers_dict[optimizer])
+
         super(UOptimizer, self).__init__(params, defaults)
 
     def __setstate__(self, state):
@@ -106,6 +156,8 @@ class UOptimizer(Optimizer):
             group.setdefault('use_bias_correction', False)
         for group in self.param_groups:
             group.setdefault('use_adadelta_lr', False)
+        for group in self.param_groups:
+            group.setdefault('eps_under_root', False)
 
     def step(self, closure=None):
         """Performs a single optimization step.
@@ -131,6 +183,7 @@ class UOptimizer(Optimizer):
                 use_adadelta_lr=group['use_adadelta_lr']
                 decouple_wd = group['decouple_wd']
                 eps = group['eps']
+                eps_under_root = group['eps_under_root']
                 state = self.state[p]
 
                 if grad.is_sparse and (use_exp_avg_norm or use_exp_avg_sq_norm or use_adadelta_lr):
@@ -212,7 +265,11 @@ class UOptimizer(Optimizer):
                         # Maintains the maximum of all 2nd moment running avg. till now
                         torch.max(max_exp_avg_sq, exp_avg_sq, out=max_exp_avg_sq)
                         # Use the max. for normalizing running avg. of gradient
-                        denom = max_exp_avg_sq.sqrt().add_(eps)
+                        if not eps_under_root:
+                            denom = max_exp_avg_sq.sqrt().add_(eps)
+                        else:
+                            denom = max_exp_avg_sq.add(eps).sqrt_()
+
 
                     elif exp_avg_sq_norm_type == 'infinite_l':
                         # Update the exponentially weighted infinity norm.
@@ -224,7 +281,10 @@ class UOptimizer(Optimizer):
                         denom = exp_inf
 
                     else:
-                        denom = exp_avg_sq.sqrt().add_(eps)
+                        if not eps_under_root:
+                            denom = exp_avg_sq.sqrt().add_(eps)
+                        else:
+                            denom = exp_avg_sq.add(eps).sqrt_()
 
                 # calculate lr corrections:
                 if use_bias_correction:

@@ -81,7 +81,7 @@ class Nadam(Optimizer):
                 if den1==0:
                     den1 += group['eps']
                 exp_avg_sq_prime = exp_avg_sq.div(den1)
-                
+
                 denom = exp_avg_sq_prime.sqrt_().add_(group['eps'])
 
                 p.data.addcdiv_(-group['lr'] * (1. - momentum_cache_t) / (1. - m_schedule_new), grad, denom)
